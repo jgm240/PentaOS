@@ -10,6 +10,11 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 WORK_DIR="${PROJECT_ROOT}/build"
 OUTPUT_DIR="${PROJECT_ROOT}/images"
 
+# Raspberry Pi OS base image to build from
+RPI_OS_RELEASE_DIR="raspios_lite_arm64-2026-06-19"
+RPI_OS_IMAGE="2026-06-18-raspios-trixie-arm64-lite.img"
+PENTAOS_VERSION="1.0.0-alpha"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -49,16 +54,16 @@ download_rpi_os() {
 
     mkdir -p "$OUTPUT_DIR"
 
-    if [ -f "$OUTPUT_DIR/2024-10-04-raspios-bookworm-arm64.img.xz" ]; then
+    if [ -f "$OUTPUT_DIR/${RPI_OS_IMAGE}.xz" ]; then
         echo -e "${GREEN}✓ Raspberry Pi OS already downloaded${NC}"
         return 0
     fi
 
     # Latest Raspberry Pi OS 64-bit Lite image URL
-    RPM_OS_URL="https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2024-10-04/2024-10-04-raspios-bookworm-arm64.img.xz"
+    RPM_OS_URL="https://downloads.raspberrypi.com/raspios_lite_arm64/images/${RPI_OS_RELEASE_DIR}/${RPI_OS_IMAGE}.xz"
 
     echo "Downloading from: $RPM_OS_URL"
-    if wget -q --show-progress -O "$OUTPUT_DIR/2024-10-04-raspios-bookworm-arm64.img.xz" "$RPM_OS_URL"; then
+    if wget -q --show-progress -O "$OUTPUT_DIR/${RPI_OS_IMAGE}.xz" "$RPM_OS_URL"; then
         echo -e "${GREEN}✓ Download completed${NC}"
     else
         echo -e "${RED}✗ Download failed${NC}"
@@ -70,8 +75,8 @@ download_rpi_os() {
 extract_image() {
     echo -e "${YELLOW}Extracting Raspberry Pi OS image...${NC}"
 
-    local image_xz="$OUTPUT_DIR/2024-10-04-raspios-bookworm-arm64.img.xz"
-    local image_img="$OUTPUT_DIR/2024-10-04-raspios-bookworm-arm64.img"
+    local image_xz="$OUTPUT_DIR/${RPI_OS_IMAGE}.xz"
+    local image_img="$OUTPUT_DIR/${RPI_OS_IMAGE}"
 
     if [ -f "$image_img" ]; then
         echo -e "${GREEN}✓ Image already extracted${NC}"
@@ -115,8 +120,8 @@ customize_image() {
 create_pentaos_image() {
     echo -e "${YELLOW}Creating PentaOS image...${NC}"
 
-    local source_img="$OUTPUT_DIR/2024-10-04-raspios-bookworm-arm64.img"
-    local pentaos_img="$OUTPUT_DIR/pentaos-1.0.0-arm64.img"
+    local source_img="$OUTPUT_DIR/${RPI_OS_IMAGE}"
+    local pentaos_img="$OUTPUT_DIR/pentaos-${PENTAOS_VERSION}-arm64.img"
 
     if [ -f "$pentaos_img" ]; then
         echo -e "${GREEN}✓ PentaOS image already created${NC}"
@@ -139,11 +144,11 @@ print_build_info() {
     echo -e "${GREEN}Build completed successfully!${NC}"
     echo -e "${GREEN}===============================================${NC}"
     echo ""
-    echo -e "PentaOS Image: ${YELLOW}$OUTPUT_DIR/pentaos-1.0.0-arm64.img${NC}"
+    echo -e "PentaOS Image: ${YELLOW}$OUTPUT_DIR/pentaos-${PENTAOS_VERSION}-arm64.img${NC}"
     echo ""
     echo "Next steps:"
     echo "1. Flash to SD card:"
-    echo "   ${YELLOW}sudo dd if=$OUTPUT_DIR/pentaos-1.0.0-arm64.img of=/dev/sdX bs=4M status=progress${NC}"
+    echo "   ${YELLOW}sudo dd if=$OUTPUT_DIR/pentaos-${PENTAOS_VERSION}-arm64.img of=/dev/sdX bs=4M status=progress${NC}"
     echo ""
     echo "2. Or use the flash script:"
     echo "   ${YELLOW}sudo $SCRIPT_DIR/flash-sd-card.sh /dev/sdX${NC}"

@@ -1,7 +1,13 @@
 #!/bin/bash
 
 # PentaOS Image Customization Script
-# Mounts and customizes a Raspberry Pi OS image with PentaOS branding and tools
+# Customizes a Raspberry Pi OS image with PentaOS branding and tools.
+#
+# The boot partition (FAT32) is edited with mtools and the root partition
+# (ext4) is edited via an offset-based loop mount. Neither technique
+# depends on kernel loop-partition scanning (`losetup -P`) or a `vfat`
+# kernel module, so this works in restricted/CI containers as well as on
+# a full Linux host with root privileges.
 
 set -e
 
@@ -10,6 +16,9 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 IMAGES_DIR="${PROJECT_ROOT}/images"
 MOUNT_DIR="/mnt/pentaos-build"
 LOG_FILE="/var/log/pentaos-customize.log"
+
+RPI_OS_IMAGE="${RPI_OS_IMAGE:-2026-06-18-raspios-trixie-arm64-lite.img}"
+PENTAOS_VERSION="${PENTAOS_VERSION:-1.0.0-alpha}"
 
 # Colors
 RED='\033[0;31m'
@@ -28,17 +37,9 @@ echo_header() {
     echo -e "${BLUE}===============================================${NC}"
 }
 
-echo_success() {
-    echo -e "${GREEN}✓ $1${NC}"
-}
-
-echo_error() {
-    echo -e "${RED}✗ $1${NC}"
-}
-
-echo_warning() {
-    echo -e "${YELLOW}⚠ $1${NC}"
-}
+echo_success() { echo -e "${GREEN}✓ $1${NC}"; }
+echo_error() { echo -e "${RED}✗ $1${NC}"; }
+echo_warning() { echo -e "${YELLOW}⚠ $1${NC}"; }
 
 check_root() {
     if [ "$EUID" -ne 0 ]; then
@@ -48,8 +49,8 @@ check_root() {
 }
 
 check_image() {
-    if [ ! -f "$IMAGES_DIR/2024-10-04-raspios-bookworm-arm64.img" ]; then
-        echo_error "Raspberry Pi OS image not found"
+    if [ ! -f "$IMAGES_DIR/$RPI_OS_IMAGE" ]; then
+        echo_error "Raspberry Pi OS image not found: $IMAGES_DIR/$RPI_OS_IMAGE"
         echo "Run: ./build/build-pentaos.sh first"
         exit 1
     fi
@@ -59,85 +60,78 @@ check_image() {
 cleanup_mounts() {
     echo_header "Cleaning Up Mounts"
 
-    # Unmount if mounted
-    if mountpoint -q "$MOUNT_DIR/boot"; then
-        umount "$MOUNT_DIR/boot" || true
-    fi
-    if mountpoint -q "$MOUNT_DIR"; then
+    if mountpoint -q "$MOUNT_DIR" 2>/dev/null; then
         umount "$MOUNT_DIR" || true
     fi
 
-    # Remove mount directory
-    [ -d "$MOUNT_DIR" ] && rmdir "$MOUNT_DIR" || true
+    # Detach any loop device still attached to our image
+    local image="$IMAGES_DIR/$RPI_OS_IMAGE"
+    for dev in $(losetup -j "$image" 2>/dev/null | cut -d: -f1); do
+        losetup -d "$dev" || true
+    done
+
+    [ -d "$MOUNT_DIR" ] && rmdir "$MOUNT_DIR" 2>/dev/null || true
 
     echo_success "Mounts cleaned"
 }
 
-setup_mounts() {
-    echo_header "Setting Up Image Mounts"
+# Reads the boot/root partition start sector + sector count (512-byte
+# sectors) from the image's partition table into BOOT_START/BOOT_SIZE and
+# ROOT_START/ROOT_SIZE.
+read_partition_table() {
+    local image="$1"
 
-    local image="$IMAGES_DIR/2024-10-04-raspios-bookworm-arm64.img"
+    local table
+    table="$(sfdisk -J "$image")"
 
-    # Create mount directory
-    mkdir -p "$MOUNT_DIR"
+    BOOT_START=$(echo "$table" | python3 -c "import json,sys; d=json.load(sys.stdin)['partitiontable']['partitions']; print(d[0]['start'])")
+    BOOT_SIZE=$(echo "$table" | python3 -c "import json,sys; d=json.load(sys.stdin)['partitiontable']['partitions']; print(d[0]['size'])")
+    ROOT_START=$(echo "$table" | python3 -c "import json,sys; d=json.load(sys.stdin)['partitiontable']['partitions']; print(d[1]['start'])")
+    ROOT_SIZE=$(echo "$table" | python3 -c "import json,sys; d=json.load(sys.stdin)['partitiontable']['partitions']; print(d[1]['size'])")
 
-    # Find partition offsets using fdisk
-    local partition_info=$(fdisk -l "$image" | grep "^$image")
-
-    # Extract partition offsets (simplified - assumes standard Pi OS layout)
-    # Partition 1 (boot): usually starts at 2048 * 512 = 1048576
-    # Partition 2 (root): usually starts later
-
-    echo "Finding partition offsets..."
-
-    # Using losetup to find offsets automatically
-    local loop_device=$(losetup -f)
-    losetup "$loop_device" "$image"
-
-    # Find partitions
-    local boot_part=""
-    local root_part=""
-
-    for part in "$loop_device"p*; do
-        if [ -b "$part" ]; then
-            local sector=$(cat /sys/class/block/$(basename "$part")/start)
-            if [ "$sector" -lt 1000000 ]; then
-                boot_part="$part"
-                echo "Boot partition: $part (sector $sector)"
-            else
-                root_part="$part"
-                echo "Root partition: $part (sector $sector)"
-            fi
-        fi
-    done
-
-    if [ -z "$boot_part" ] || [ -z "$root_part" ]; then
-        echo_error "Could not find partitions in image"
-        losetup -d "$loop_device"
+    if [ -z "$BOOT_START" ] || [ -z "$ROOT_START" ]; then
+        echo_error "Could not read partition table from image"
         exit 1
     fi
 
-    # Mount partitions
-    mkdir -p "$MOUNT_DIR/root"
-    mkdir -p "$MOUNT_DIR/boot"
+    BOOT_OFFSET=$((BOOT_START * 512))
+    ROOT_OFFSET=$((ROOT_START * 512))
 
-    mount "$root_part" "$MOUNT_DIR" || exit 1
-    mount "$boot_part" "$MOUNT_DIR/boot" || exit 1
+    log "boot partition: start=$BOOT_START size=$BOOT_SIZE (offset $BOOT_OFFSET)"
+    log "root partition: start=$ROOT_START size=$ROOT_SIZE (offset $ROOT_OFFSET)"
+}
 
-    echo_success "Image mounted at $MOUNT_DIR"
-    log "Mounted $root_part at $MOUNT_DIR"
-    log "Mounted $boot_part at $MOUNT_DIR/boot"
+setup_root_mount() {
+    echo_header "Mounting Root Partition"
+
+    local image="$1"
+
+    mkdir -p "$MOUNT_DIR"
+
+    ROOT_LOOP=$(losetup -f --show -o "$ROOT_OFFSET" --sizelimit $((ROOT_SIZE * 512)) "$image")
+    mount "$ROOT_LOOP" "$MOUNT_DIR" || {
+        losetup -d "$ROOT_LOOP"
+        echo_error "Failed to mount root partition"
+        exit 1
+    }
+
+    echo_success "Root partition mounted at $MOUNT_DIR"
+    log "Mounted root partition via $ROOT_LOOP at $MOUNT_DIR"
+}
+
+# Writes a local file into the FAT32 boot partition using mtools, directly
+# against the disk image at the boot partition's byte offset. No mount
+# (and therefore no vfat kernel driver) required.
+boot_mcopy() {
+    local local_file="$1"
+    local dest_path="$2"
+    mcopy -o -i "${IMAGE}@@${BOOT_OFFSET}" "$local_file" "::${dest_path}"
 }
 
 customize_hostname() {
     echo_header "Customizing Hostname"
-
-    # Set hostname
     echo "pentaos" > "$MOUNT_DIR/etc/hostname"
-
-    # Update hosts file
     sed -i 's/raspberrypi/pentaos/g' "$MOUNT_DIR/etc/hosts"
-
     echo_success "Hostname set to 'pentaos'"
 }
 
@@ -168,31 +162,27 @@ customize_branding() {
         echo_success "Logo installed"
     fi
 
-    # Create branding directory
     mkdir -p "$MOUNT_DIR/etc/pentaos"
-    echo "PentaOS v1.0.0-alpha" > "$MOUNT_DIR/etc/pentaos/version"
-    echo "Release: Raspberry Pi OS Bookworm with PentaOS Customizations" > "$MOUNT_DIR/etc/pentaos/release"
+    echo "PentaOS v${PENTAOS_VERSION}" > "$MOUNT_DIR/etc/pentaos/version"
+    echo "Release: Raspberry Pi OS with PentaOS Customizations" > "$MOUNT_DIR/etc/pentaos/release"
 }
 
 customize_motd() {
     echo_header "Creating Welcome Message"
 
-    cat > "$MOUNT_DIR/etc/motd" << 'EOF'
+    cat > "$MOUNT_DIR/etc/motd" << EOF
  _____ _____ _____ _____ _____ _____
 |  _  | ___ |  _  |_   _|  _  |  _  |
 | |_| | |_/ | | | | | | | | | | | | |
-|  _  |    \ | | | | | | | | | | | | |
-| | | | |\ \\ |_| | | | | |_| | |_| |
-\_| |_\_| \_|\___/  \_/  \___/|_____/
+|  _  |    \\ | | | | | | | | | | | | |
+| | | | |\\ \\\\ |_| | | | | |_| | |_| |
+\\_| |_\\_| \\_|\\___/  \\_/  \\___/|_____/
 
-Welcome to PentaOS v1.0.0-alpha
+Welcome to PentaOS v${PENTAOS_VERSION}
 Multi-core Excellence for Raspberry Pi
 
 For more information, visit: https://github.com/jgm240/pentaos
 Documentation: https://github.com/jgm240/pentaos/docs
-
-Default login: pi / raspberry
-(Change password immediately!)
 
 Happy computing!
 EOF
@@ -201,10 +191,9 @@ EOF
 }
 
 add_boot_splash() {
-    echo_header "Adding Boot Splash"
+    echo_header "Adding Boot Configuration Notes"
 
-    # Create a simple splash screen configuration
-    cat > "$MOUNT_DIR/boot/firmware/boot-splash.txt" << 'EOF'
+    cat > /tmp/pentaos-boot-splash.txt << 'EOF'
 # PentaOS Boot Configuration
 # Pentagon-themed operating system for Raspberry Pi
 
@@ -213,13 +202,15 @@ dtoverlay=vc4-fkms-v3d
 gpu_mem=128
 EOF
 
-    echo_success "Boot configuration added"
+    boot_mcopy /tmp/pentaos-boot-splash.txt /boot-splash.txt
+    rm -f /tmp/pentaos-boot-splash.txt
+
+    echo_success "Boot configuration notes added to boot partition"
 }
 
 preinstall_packages() {
     echo_header "Pre-installing Useful Packages"
 
-    # Create a script to run on first boot
     cat > "$MOUNT_DIR/usr/local/bin/pentaos-first-setup" << 'EOF'
 #!/bin/bash
 # First-time setup for PentaOS
@@ -250,12 +241,29 @@ EOF
     echo_success "Packages pre-configured for installation"
 }
 
+install_first_boot_service() {
+    echo_header "Installing First-Boot Setup Service"
+
+    cp "$SCRIPT_DIR/pentaos-first-boot.sh" "$MOUNT_DIR/usr/local/bin/pentaos-first-boot.sh"
+    chmod +x "$MOUNT_DIR/usr/local/bin/pentaos-first-boot.sh"
+
+    cp "$SCRIPT_DIR/pentaos-first-boot.service" "$MOUNT_DIR/etc/systemd/system/pentaos-first-boot.service"
+
+    mkdir -p "$MOUNT_DIR/etc/systemd/system/multi-user.target.wants"
+    ln -sf /etc/systemd/system/pentaos-first-boot.service \
+        "$MOUNT_DIR/etc/systemd/system/multi-user.target.wants/pentaos-first-boot.service"
+
+    cp "$SCRIPT_DIR/setup-desktop.sh" "$MOUNT_DIR/usr/local/bin/pentaos-setup-desktop"
+    chmod +x "$MOUNT_DIR/usr/local/bin/pentaos-setup-desktop"
+
+    echo_success "First-boot service enabled"
+}
+
 customize_login() {
     echo_header "Customizing Login Screen"
 
-    # Add PentaOS to the login issue banner
-    cat > "$MOUNT_DIR/etc/issue.net" << 'EOF'
-\n                    PentaOS v1.0.0-alpha
+    cat > "$MOUNT_DIR/etc/issue.net" << EOF
+\n                    PentaOS v${PENTAOS_VERSION}
           Multi-core Excellence for Raspberry Pi
 \n                   https://github.com/jgm240/pentaos
 
@@ -267,6 +275,7 @@ EOF
 create_readme() {
     echo_header "Creating PentaOS README"
 
+    mkdir -p "$MOUNT_DIR/home/pi"
     cat > "$MOUNT_DIR/home/pi/PENTAOS_README.txt" << 'EOF'
 =====================================
 Welcome to PentaOS!
@@ -275,9 +284,8 @@ Welcome to PentaOS!
 This is a customized Raspberry Pi OS with PentaOS branding and tools.
 
 FIRST STEPS:
-1. Change your password: passwd
-2. Update the system: sudo apt update && sudo apt upgrade
-3. Run setup: sudo pentaos-first-setup (optional)
+1. Update the system: sudo apt update && sudo apt upgrade
+2. Run setup: sudo pentaos-first-setup (optional)
 
 PENTAOS FEATURES:
 - Beautiful pentagon branding and wallpaper
@@ -287,12 +295,12 @@ PENTAOS FEATURES:
 - Lightweight and optimized for Raspberry Pi
 
 INSTALL ADDITIONAL TOOLS:
-- Desktop environments: sudo build/setup-desktop.sh
+- Desktop environments: sudo pentaos-setup-desktop
 - Compatibility layer: sudo build/install-compatibility-layer.sh
 - Accessibility tools: sudo build/install-accessibility-tools.sh
 
 DOCUMENTATION:
-See /root/pentaos/docs/ for complete guides
+See https://github.com/jgm240/pentaos/tree/main/docs for complete guides
 
 COMMUNITY:
 - GitHub: https://github.com/jgm240/pentaos
@@ -301,16 +309,13 @@ COMMUNITY:
 Enjoy PentaOS!
 EOF
 
-    chown 1000:1000 "$MOUNT_DIR/home/pi/PENTAOS_README.txt"
+    chown -R 1000:1000 "$MOUNT_DIR/home/pi/PENTAOS_README.txt"
     echo_success "README created"
 }
 
 finalize_image() {
     echo_header "Finalizing Image"
-
-    # Sync filesystem
     sync
-
     echo_success "Image customization complete"
 }
 
@@ -329,36 +334,42 @@ main() {
     check_image
     cleanup_mounts
 
+    IMAGE="$IMAGES_DIR/$RPI_OS_IMAGE"
+
     # Extract the image first if compressed
-    if [ -f "$IMAGES_DIR/2024-10-04-raspios-bookworm-arm64.img.xz" ] && [ ! -f "$IMAGES_DIR/2024-10-04-raspios-bookworm-arm64.img" ]; then
+    if [ -f "${IMAGE}.xz" ] && [ ! -f "$IMAGE" ]; then
         echo_header "Extracting Image"
-        cd "$IMAGES_DIR"
-        xz -d -k 2024-10-04-raspios-bookworm-arm64.img.xz || true
-        cd - > /dev/null
+        xz -d -k "${IMAGE}.xz"
     fi
 
-    setup_mounts
+    read_partition_table "$IMAGE"
+    setup_root_mount "$IMAGE"
 
-    # Run customizations
+    # Root (ext4) customizations - direct filesystem edits via loop mount
     customize_hostname
     customize_wallpaper
     customize_branding
     customize_motd
     customize_login
-    add_boot_splash
     preinstall_packages
+    install_first_boot_service
     create_readme
     finalize_image
 
-    # Cleanup
-    cleanup_mounts
+    sync
+    umount "$MOUNT_DIR"
+    losetup -d "$ROOT_LOOP"
+    rmdir "$MOUNT_DIR"
+
+    # Boot (FAT32) customizations - via mtools, no mount required
+    add_boot_splash
 
     echo ""
     echo_header "Customization Complete!"
     echo ""
     echo "Next steps:"
-    echo "1. Create compressed image: xz -k $IMAGES_DIR/2024-10-04-raspios-bookworm-arm64.img"
-    echo "2. Flash to SD card: sudo dd if=$IMAGES_DIR/2024-10-04-raspios-bookworm-arm64.img of=/dev/sdX bs=4M status=progress"
+    echo "1. Create compressed image: xz -k $IMAGE"
+    echo "2. Flash to SD card: sudo dd if=$IMAGE of=/dev/sdX bs=4M status=progress"
     echo ""
 
     log "PentaOS image customization completed successfully"

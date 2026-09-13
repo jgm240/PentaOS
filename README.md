@@ -7,8 +7,10 @@
 🚀 **Performance Optimized** - Tuned for Raspberry Pi hardware  
 🌐 **Multi-Core Ready** - Optimized for modern Raspberry Pi models  
 🎨 **Custom Branding** - Pentagon-themed UI and branding  
+🖥️ **Flexible Desktop Environments** - Choose GNOME, KDE, Pi Desktop, or Headless  
 🔧 **Pre-configured Tools** - Essential development tools included  
 📦 **Lightweight** - Minimal bloatware for maximum efficiency  
+⚡ **Smart Setup** - Automatic detection and installation on first boot  
 
 ## Logo
 
@@ -84,11 +86,17 @@ PentaOS adds the following customizations:
 - Pre-configured development environment
 - Enhanced thermal management
 - Custom desktop theme
+- **Intelligent Desktop Environment Selection**
+  - Automatic detection of internet connectivity on first boot
+  - Interactive menu to choose between GNOME, KDE, Pi Desktop, or Headless
+  - Optimized installation scripts for fast setup
+  - Smart configuration of display managers
 
 ## Documentation
 
 - [Branding Guide](branding/BRANDING.md)
 - [Build Instructions](docs/BUILD.md)
+- [Desktop Environment Setup](docs/DESKTOP-SETUP.md)
 - [Configuration Guide](docs/CONFIGURATION.md)
 - [Contributing Guide](docs/CONTRIBUTING.md)
 

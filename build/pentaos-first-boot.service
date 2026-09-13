@@ -1,0 +1,13 @@
+[Unit]
+Description=PentaOS First Boot Setup
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/bin/pentaos-first-boot.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -93,13 +93,22 @@ customize_image() {
     # This is a placeholder for image customization
     # In a real scenario, you would:
     # 1. Mount the image
-    # 2. Copy custom files
+    # 2. Copy custom files (setup scripts, branding)
     # 3. Modify configuration files
-    # 4. Update splash screens
-    # 5. Unmount the image
+    # 4. Set up first-boot systemd service
+    # 5. Update splash screens
+    # 6. Unmount the image
 
     echo -e "${YELLOW}Note: Full image customization requires elevated privileges${NC}"
     echo -e "${YELLOW}To complete: sudo ./build/customize-image.sh${NC}"
+
+    # Copy setup scripts to standard location for reference
+    mkdir -p "$WORK_DIR/setup-files"
+    cp "$SCRIPT_DIR/setup-desktop.sh" "$WORK_DIR/setup-files/"
+    cp "$SCRIPT_DIR/pentaos-first-boot.sh" "$WORK_DIR/setup-files/"
+    cp "$SCRIPT_DIR/pentaos-first-boot.service" "$WORK_DIR/setup-files/"
+
+    echo -e "${YELLOW}Setup scripts prepared in: $WORK_DIR/setup-files/${NC}"
 }
 
 # Create PentaOS image

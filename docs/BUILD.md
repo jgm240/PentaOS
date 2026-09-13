@@ -119,6 +119,53 @@ sudo sync
 passwd
 ```
 
+### Desktop Environment Setup
+
+If your Raspberry Pi has internet access during first boot, PentaOS will automatically offer a choice of desktop environments:
+
+#### Automatic First-Boot Setup (Recommended)
+
+When PentaOS detects an internet connection on first boot, it will automatically launch an interactive setup wizard that lets you choose your desktop environment.
+
+**Options:**
+1. **GNOME** - Feature-rich, modern desktop (requires 4GB+ RAM)
+2. **KDE Plasma** - Customizable, powerful desktop (requires 4GB+ RAM)
+3. **Raspberry Pi Desktop (XFCE)** - Lightweight, optimized (requires 1GB+ RAM)
+4. **Headless** - Command-line only (minimal resources)
+
+#### Manual Setup
+
+If the automatic setup didn't run, you can manually configure your desktop environment:
+
+```bash
+# Run the desktop setup script
+sudo /usr/local/bin/pentaos-setup-desktop
+
+# Or from the build directory
+sudo build/setup-desktop.sh
+```
+
+The script will:
+- Check your internet connection
+- Show system requirements for each option
+- Install your chosen desktop environment
+- Configure the display manager
+- Clean up package cache
+
+#### Changing Desktop Environments Later
+
+To switch to a different desktop environment later:
+
+```bash
+# Re-run the setup script
+sudo build/setup-desktop.sh
+
+# Or update specific packages
+sudo apt-get install gnome-desktop-environment
+sudo apt-get install kde-plasma-desktop
+sudo apt-get install raspberrypi-ui-mods
+```
+
 ### Post-Installation Configuration
 
 ```bash

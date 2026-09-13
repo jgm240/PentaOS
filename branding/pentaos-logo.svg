@@ -27,7 +27,6 @@
   <!-- Top-left side - Orange (#FFB84D) -->
   <line x1="33" y1="78" x2="100" y2="30" class="pentagon-line" stroke="#FFB84D" stroke-width="4"/>
 
-  <!-- Center circle for PentaOS branding -->
-  <circle cx="100" cy="100" r="20" fill="none" stroke="white" stroke-width="2"/>
-  <text x="100" y="104" class="text-label" font-size="9">PentaOS</text>
+  <!-- Center text for PentaOS branding -->
+  <text x="100" y="107" class="text-label" font-size="11">PentaOS</text>
 </svg>

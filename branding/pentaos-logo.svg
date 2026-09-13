@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <!-- Pentagon with 5 colored sections -->
+  <!-- Pentagon outline with 5 colored strokes -->
   <defs>
     <style>
-      .pentagon-section { stroke: white; stroke-width: 1; }
+      .pentagon-line { fill: none; stroke-linecap: round; stroke-linejoin: round; }
       .text-label { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; fill: white; text-anchor: middle; }
     </style>
   </defs>
@@ -11,23 +11,26 @@
   <!-- Background circle -->
   <circle cx="100" cy="100" r="95" fill="#1a1a2e"/>
 
-  <!-- Pentagon sections (5 colored triangles from center) -->
-  <!-- Section 1: Red (#FF6B6B) - Top -->
-  <polygon points="100,100 155,31 75,31" class="pentagon-section" fill="#FF6B6B"/>
+  <!-- Pentagon outline with 5 colored strokes -->
+  <!-- Top side - Red (#FF6B6B) -->
+  <line x1="155" y1="31" x2="75" y2="31" class="pentagon-line" stroke="#FF6B6B" stroke-width="4"/>
 
-  <!-- Section 2: Blue (#4ECDC4) - Top Right -->
-  <polygon points="100,100 155,31 169,89" class="pentagon-section" fill="#4ECDC4"/>
+  <!-- Top-right side - Cyan (#4ECDC4) -->
+  <line x1="75" y1="31" x2="31" y2="89" class="pentagon-line" stroke="#4ECDC4" stroke-width="4"/>
 
-  <!-- Section 3: Green (#95E77D) - Bottom Right -->
-  <polygon points="100,100 169,89 130,169" class="pentagon-section" fill="#95E77D"/>
+  <!-- Bottom-right side - Green (#95E77D) -->
+  <line x1="31" y1="89" x2="70" y2="169" class="pentagon-line" stroke="#95E77D" stroke-width="4"/>
 
-  <!-- Section 4: Purple (#A78BFA) - Bottom Left -->
-  <polygon points="100,100 130,169 70,169" class="pentagon-section" fill="#A78BFA"/>
+  <!-- Bottom-left side - Purple (#A78BFA) -->
+  <line x1="70" y1="169" x2="130" y2="169" class="pentagon-line" stroke="#A78BFA" stroke-width="4"/>
 
-  <!-- Section 5: Orange (#FFB84D) - Top Left -->
-  <polygon points="100,100 70,169 31,89" class="pentagon-section" fill="#FFB84D"/>
+  <!-- Top-left side - Orange (#FFB84D) -->
+  <line x1="130" y1="169" x2="169" y2="89" class="pentagon-line" stroke="#FFB84D" stroke-width="4"/>
+
+  <!-- Close the pentagon - Red (#FF6B6B) -->
+  <line x1="169" y1="89" x2="155" y2="31" class="pentagon-line" stroke="#FF6B6B" stroke-width="4"/>
 
   <!-- Center circle for PentaOS branding -->
-  <circle cx="100" cy="100" r="25" fill="#1a1a2e" stroke="white" stroke-width="1.5"/>
+  <circle cx="100" cy="100" r="25" fill="none" stroke="white" stroke-width="2"/>
   <text x="100" y="107" class="text-label" font-size="10">PENTA</text>
 </svg>

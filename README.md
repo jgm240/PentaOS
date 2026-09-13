@@ -6,12 +6,13 @@
 
 🚀 **Performance Optimized** - Tuned for Raspberry Pi hardware  
 🌐 **Multi-Core Ready** - Optimized for modern Raspberry Pi models  
-🎨 **Custom Branding** - Pentagon-themed UI and branding  
+🎨 **Custom Branding** - Pentagon-themed UI, logos, and wallpapers  
 🖥️ **Flexible Desktop Environments** - Choose GNOME, KDE, Pi Desktop, or Headless  
 🔧 **Pre-configured Tools** - Essential development tools included  
 📦 **Lightweight** - Minimal bloatware for maximum efficiency  
 ⚡ **Smart Setup** - Automatic detection and installation on first boot  
 🎮 **Compatibility Layer** - Run Windows, x86-64, and x86 apps with Wine, Box64, and Box86  
+♿ **Accessibility Suite** - Comprehensive tools for all users including screen readers, magnifiers, and alternative input devices  
 
 ## Logo
 
@@ -124,17 +125,50 @@ Choose from:
 
 See [Compatibility Layer Guide](docs/COMPATIBILITY-LAYER.md) for detailed information.
 
+## Accessibility & Inclusivity
+
+PentaOS includes a comprehensive accessibility suite to ensure everyone can use their Raspberry Pi effectively.
+
+**Included Tools:**
+- 🔊 **Screen Readers** - Orca (GNOME), Festival, eSpeak text-to-speech
+- 🔍 **Visual Aids** - Magnification, high contrast modes, color blind filters
+- ⌨️ **Keyboard Access** - Sticky keys, slow keys, mouse keys, on-screen keyboards (Onboard, Florence)
+- 🎮 **Alternative Input** - Joystick/gamepad support, eye tracking, controller mapping (AntiMicroX)
+- 🎯 **Motor Accessibility** - Bounce key protection, pointer enhancement
+- 📢 **Auditory Support** - Visual alerts, caption support
+- 🧠 **Cognitive Tools** - Focus mode, notification simplification
+
+**Installation:**
+```bash
+sudo build/install-accessibility-tools.sh
+```
+
+Choose from:
+- Essential Tools (screen reader, magnifier, keyboard)
+- Visual & Display Aids
+- Alternative Input devices
+- Speech & Auditory support
+- Cognitive accessibility tools
+- Install All (complete accessibility suite)
+
+**Default Wallpaper:**
+A beautiful PentaOS-themed wallpaper featuring the pentagon logo and 5-color scheme is set by default.
+
+See [Accessibility Guide](docs/ACCESSIBILITY.md) for complete information and configuration options.
+
 ## Documentation
 
 - [Branding Guide](branding/BRANDING.md)
 - [Build Instructions](docs/BUILD.md)
 - [Desktop Environment Setup](docs/DESKTOP-SETUP.md)
 - [Compatibility Layer Guide](docs/COMPATIBILITY-LAYER.md)
+- [Accessibility Guide](docs/ACCESSIBILITY.md)
 - [Configuration Guide](docs/CONFIGURATION.md)
 - [Contributing Guide](docs/CONTRIBUTING.md)
 
-**Build Utilities:**
+**Build & Setup Utilities:**
 - [Compatibility Bundle Reference](build/COMPATIBILITY-BUNDLE.md) - Quick reference for Wine/Box64/Box86
+- [Accessibility Tools Reference](build/install-accessibility-tools.sh) - Install screen readers, magnifiers, and alternative input
 
 ## Support & Community
 

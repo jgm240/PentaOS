@@ -256,7 +256,7 @@ ping google.com
 
 # Or manually download:
 cd images
-wget https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2024-10-04/2024-10-04-raspios-bookworm-arm64.img.xz
+wget https://downloads.raspberrypi.com/raspios_lite_arm64/images/raspios_lite_arm64-2026-06-19/2026-06-18-raspios-trixie-arm64-lite.img.xz
 cd ..
 ```
 

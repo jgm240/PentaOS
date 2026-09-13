@@ -10,6 +10,7 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 IMAGES_DIR="${PROJECT_ROOT}/images"
 RELEASES_DIR="${PROJECT_ROOT}/releases"
 VERSION="1.0.0-alpha"
+RPI_OS_IMAGE="2026-06-18-raspios-trixie-arm64-lite.img"
 LOG_FILE="/var/log/pentaos-release.log"
 
 # Colors
@@ -51,13 +52,13 @@ check_root() {
 check_images() {
     echo_header "Checking Images"
 
-    if [ ! -f "$IMAGES_DIR/2024-10-04-raspios-bookworm-arm64.img" ]; then
+    if [ ! -f "$IMAGES_DIR/$RPI_OS_IMAGE" ]; then
         echo_error "Base image not found"
         echo "Run: ./build/build-pentaos.sh first"
         exit 1
     fi
 
-    local size=$(du -h "$IMAGES_DIR/2024-10-04-raspios-bookworm-arm64.img" | cut -f1)
+    local size=$(du -h "$IMAGES_DIR/$RPI_OS_IMAGE" | cut -f1)
     echo_success "Found base image (${size})"
 }
 
@@ -72,7 +73,7 @@ build_pentaos_image() {
     echo_header "Building PentaOS Image"
 
     echo "Customizing image with PentaOS features..."
-    if ! sudo "$SCRIPT_DIR/customize-rpi-image.sh"; then
+    if ! sudo RPI_OS_IMAGE="$RPI_OS_IMAGE" PENTAOS_VERSION="$VERSION" "$SCRIPT_DIR/customize-rpi-image.sh"; then
         echo_error "Image customization failed"
         exit 1
     fi
@@ -83,7 +84,7 @@ build_pentaos_image() {
 compress_image() {
     echo_header "Compressing Image"
 
-    local img="$IMAGES_DIR/2024-10-04-raspios-bookworm-arm64.img"
+    local img="$IMAGES_DIR/$RPI_OS_IMAGE"
     local compressed="$RELEASES_DIR/pentaos-${VERSION}-arm64.img.xz"
 
     if [ -f "$compressed" ]; then

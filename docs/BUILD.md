@@ -37,7 +37,7 @@ cd pentaos
 chmod +x build/*.sh
 ```
 
-### Step 3: Build the Image
+### Step 3: Download Raspberry Pi OS Base
 
 ```bash
 ./build/build-pentaos.sh
@@ -47,10 +47,49 @@ This script will:
 1. Check system requirements
 2. Download latest Raspberry Pi OS
 3. Extract the image
-4. Apply PentaOS customizations
-5. Create the final `pentaos-1.0.0-arm64.img`
+4. Create the base image in `images/`
 
-The build process takes 5-15 minutes depending on internet speed.
+The download takes 5-15 minutes depending on internet speed.
+
+### Step 4: Create Bootable PentaOS Image
+
+**Option A: Quick Image (Customized Base)**
+
+```bash
+sudo ./build/customize-rpi-image.sh
+```
+
+This customizes the Raspberry Pi OS image with:
+- PentaOS branding and wallpaper
+- System configuration
+- Welcome message
+- Pre-configured packages
+- Boot splash screen
+
+**Option B: Create Release Image (.img.xz)**
+
+```bash
+sudo ./build/release-image.sh
+```
+
+This creates a complete release package with:
+1. Customized PentaOS image
+2. Compressed .img.xz file
+3. SHA256 and MD5 checksums
+4. Release notes and documentation
+5. Installation guide
+
+The customization process requires root privileges and takes 10-30 minutes (longer if mounting/unmounting is slow).
+
+### Step 5: Verify the Image
+
+```bash
+# Check image exists
+ls -lh images/pentaos-*.img
+
+# Or check release files
+ls -lh releases/
+```
 
 ### Step 4: Verify the Image
 

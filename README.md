@@ -11,6 +11,7 @@
 🔧 **Pre-configured Tools** - Essential development tools included  
 📦 **Lightweight** - Minimal bloatware for maximum efficiency  
 ⚡ **Smart Setup** - Automatic detection and installation on first boot  
+🎮 **Compatibility Layer** - Run Windows, x86-64, and x86 apps with Wine, Box64, and Box86  
 
 ## Logo
 
@@ -91,14 +92,49 @@ PentaOS adds the following customizations:
   - Interactive menu to choose between GNOME, KDE, Pi Desktop, or Headless
   - Optimized installation scripts for fast setup
   - Smart configuration of display managers
+- **Compatibility Layer Bundle**
+  - Wine for running Windows applications
+  - Box64 for x86-64 binary translation (ARM64)
+  - Box86 for x86 32-bit binary translation
+  - Automated installation with system detection
+  - Convenient launcher scripts
+
+## Compatibility Layer
+
+PentaOS includes an optional compatibility layer bundle that transforms your Raspberry Pi into a multi-platform application runner:
+
+**Supported Applications:**
+- 🪟 **Windows Programs** - Via Wine compatibility layer
+- 🖥️ **x86-64 Binaries** - Via Box64 dynamic translation (Pi 4/5)
+- 🔧 **x86 32-bit Apps** - Via Box86 binary translation
+- 🎮 **Windows Games** - DirectX 9/11 support via Wine
+
+**Installation:**
+```bash
+sudo build/install-compatibility-layer.sh
+```
+
+Choose from:
+- Wine only (basic Windows support)
+- Box64 only (x86-64 translation)
+- Box86 only (x86 32-bit translation)
+- Wine + Box64 (recommended for ARM64)
+- Wine + Box86 (recommended for ARMv7)
+- All three components (maximum compatibility)
+
+See [Compatibility Layer Guide](docs/COMPATIBILITY-LAYER.md) for detailed information.
 
 ## Documentation
 
 - [Branding Guide](branding/BRANDING.md)
 - [Build Instructions](docs/BUILD.md)
 - [Desktop Environment Setup](docs/DESKTOP-SETUP.md)
+- [Compatibility Layer Guide](docs/COMPATIBILITY-LAYER.md)
 - [Configuration Guide](docs/CONFIGURATION.md)
 - [Contributing Guide](docs/CONTRIBUTING.md)
+
+**Build Utilities:**
+- [Compatibility Bundle Reference](build/COMPATIBILITY-BUNDLE.md) - Quick reference for Wine/Box64/Box86
 
 ## Support & Community
 

@@ -1,0 +1,26 @@
+# Build artifacts
+images/
+releases/
+*.img
+*.img.xz
+*.sha256
+*.md5
+
+# Logs
+*.log
+/var/log/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# System
+.env
+.env.local
+*.tmp

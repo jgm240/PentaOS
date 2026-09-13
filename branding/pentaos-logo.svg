@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Pentagon with 5 colored sections -->
+  <defs>
+    <style>
+      .pentagon-section { stroke: white; stroke-width: 1; }
+      .text-label { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; fill: white; text-anchor: middle; }
+    </style>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#1a1a2e"/>
+
+  <!-- Pentagon sections (5 colored triangles from center) -->
+  <!-- Section 1: Red (#FF6B6B) - Top -->
+  <polygon points="100,100 155,31 75,31" class="pentagon-section" fill="#FF6B6B"/>
+
+  <!-- Section 2: Blue (#4ECDC4) - Top Right -->
+  <polygon points="100,100 155,31 169,89" class="pentagon-section" fill="#4ECDC4"/>
+
+  <!-- Section 3: Green (#95E77D) - Bottom Right -->
+  <polygon points="100,100 169,89 130,169" class="pentagon-section" fill="#95E77D"/>
+
+  <!-- Section 4: Purple (#A78BFA) - Bottom Left -->
+  <polygon points="100,100 130,169 70,169" class="pentagon-section" fill="#A78BFA"/>
+
+  <!-- Section 5: Orange (#FFB84D) - Top Left -->
+  <polygon points="100,100 70,169 31,89" class="pentagon-section" fill="#FFB84D"/>
+
+  <!-- Center circle for PentaOS branding -->
+  <circle cx="100" cy="100" r="25" fill="#1a1a2e" stroke="white" stroke-width="1.5"/>
+  <text x="100" y="107" class="text-label" font-size="10">PENTA</text>
+</svg>

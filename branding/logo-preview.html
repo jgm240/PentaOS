@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PentaOS Logo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            max-width: 600px;
+        }
+
+        h1 {
+            color: #fff;
+            margin: 0 0 30px 0;
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #FF6B6B, #4ECDC4, #95E77D, #A78BFA, #FFB84D);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-display {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        svg {
+            width: 300px;
+            height: 300px;
+        }
+
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .color-box {
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .color-label {
+            font-size: 0.9em;
+            margin-top: 10px;
+            opacity: 0.9;
+        }
+
+        .color-hex {
+            font-size: 0.85em;
+            font-family: monospace;
+            margin-top: 5px;
+        }
+
+        .red { background-color: #FF6B6B; }
+        .cyan { background-color: #4ECDC4; }
+        .green { background-color: #95E77D; }
+        .purple { background-color: #A78BFA; }
+        .orange { background-color: #FFB84D; }
+
+        .description {
+            color: #ddd;
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin: 20px 0;
+        }
+
+        .tagline {
+            color: #aaa;
+            font-style: italic;
+            margin-top: 20px;
+        }
+
+        footer {
+            margin-top: 30px;
+            color: #999;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PentaOS</h1>
+
+        <div class="logo-display">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <style>
+                        .pentagon-section { stroke: white; stroke-width: 1; }
+                        .text-label { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; fill: white; text-anchor: middle; }
+                    </style>
+                </defs>
+
+                <!-- Background circle -->
+                <circle cx="100" cy="100" r="95" fill="#1a1a2e"/>
+
+                <!-- Pentagon sections -->
+                <polygon points="100,100 155,31 75,31" class="pentagon-section" fill="#FF6B6B"/>
+                <polygon points="100,100 155,31 169,89" class="pentagon-section" fill="#4ECDC4"/>
+                <polygon points="100,100 169,89 130,169" class="pentagon-section" fill="#95E77D"/>
+                <polygon points="100,100 130,169 70,169" class="pentagon-section" fill="#A78BFA"/>
+                <polygon points="100,100 70,169 31,89" class="pentagon-section" fill="#FFB84D"/>
+
+                <!-- Center circle -->
+                <circle cx="100" cy="100" r="25" fill="#1a1a2e" stroke="white" stroke-width="1.5"/>
+                <text x="100" y="107" class="text-label" font-size="10">PENTA</text>
+            </svg>
+        </div>
+
+        <div class="description">
+            <strong>PentaOS</strong> is an optimized operating system for Raspberry Pi,
+            built on Raspberry Pi OS with enhanced performance and custom branding.
+        </div>
+
+        <div class="color-palette">
+            <div class="color-box red">
+                <div>Innovation</div>
+                <div class="color-label">Red</div>
+                <div class="color-hex">#FF6B6B</div>
+            </div>
+            <div class="color-box cyan">
+                <div>Connectivity</div>
+                <div class="color-label">Cyan</div>
+                <div class="color-hex">#4ECDC4</div>
+            </div>
+            <div class="color-box green">
+                <div>Sustainability</div>
+                <div class="color-label">Green</div>
+                <div class="color-hex">#95E77D</div>
+            </div>
+            <div class="color-box purple">
+                <div>Creativity</div>
+                <div class="color-label">Purple</div>
+                <div class="color-hex">#A78BFA</div>
+            </div>
+            <div class="color-box orange">
+                <div>Reliability</div>
+                <div class="color-label">Orange</div>
+                <div class="color-hex">#FFB84D</div>
+            </div>
+        </div>
+
+        <div class="tagline">
+            Multi-core Excellence for Raspberry Pi
+        </div>
+
+        <footer>
+            <p>PentaOS v1.0.0-alpha | Created 2026</p>
+        </footer>
+    </div>
+</body>
+</html>

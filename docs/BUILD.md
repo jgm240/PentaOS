@@ -7,7 +7,17 @@ This guide explains how to build and deploy PentaOS on your Raspberry Pi.
 ## Prerequisites
 
 ### System Requirements
-- Linux system (Ubuntu, Debian, Raspberry Pi OS, etc.)
+- **A real Linux system is required for `customize-rpi-image.sh` / `release-image.sh`** (Ubuntu, Debian, Raspberry Pi OS, etc.). These scripts read partition tables with `sfdisk`, loop-mount the ext4 root partition, and edit the FAT32 boot partition with `mtools` - none of that exists on macOS or Windows, even via Homebrew, because it depends on Linux-specific tooling (`losetup`, `sfdisk`, ext4 mount support). `build-pentaos.sh` (download-only) has no such requirement.
+- On macOS/Windows, run the build inside a Linux container instead:
+  ```bash
+  docker run --rm --privileged -v "$PWD":/work -w /work debian:trixie bash -c "
+    apt-get update -qq &&
+    apt-get install -y -qq wget xz-utils parted dosfstools kpartx util-linux fdisk mtools e2fsprogs python3 &&
+    chmod +x build/*.sh &&
+    ./build/build-pentaos.sh &&
+    ./build/release-image.sh
+  "
+  ```
 - 8GB free disk space minimum
 - Internet connection for downloading OS images
 - MicroSD card reader
@@ -15,12 +25,11 @@ This guide explains how to build and deploy PentaOS on your Raspberry Pi.
 ### Required Tools
 ```bash
 sudo apt-get update
-sudo apt-get install -y wget xz-utils
+sudo apt-get install -y wget xz-utils parted dosfstools kpartx util-linux fdisk mtools e2fsprogs python3
 ```
 
 ### Optional Tools
 - `pv` - for progress indication during flashing
-- `fdisk` or `parted` - for partition management
 
 ## Building PentaOS
 

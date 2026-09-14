@@ -73,7 +73,11 @@ build_pentaos_image() {
     echo_header "Building PentaOS Image"
 
     echo "Customizing image with PentaOS features..."
-    if ! sudo RPI_OS_IMAGE="$RPI_OS_IMAGE" PENTAOS_VERSION="$VERSION" "$SCRIPT_DIR/customize-rpi-image.sh"; then
+    # release-image.sh already requires EUID 0 (see check_root), so invoke
+    # customize-rpi-image.sh directly rather than through sudo - which may
+    # not even be installed in a minimal/container environment that's
+    # already running as root (e.g. a Docker build).
+    if ! RPI_OS_IMAGE="$RPI_OS_IMAGE" PENTAOS_VERSION="$VERSION" "$SCRIPT_DIR/customize-rpi-image.sh"; then
         echo_error "Image customization failed"
         exit 1
     fi

@@ -90,9 +90,36 @@ compress_image() {
 
     local img="$IMAGES_DIR/$RPI_OS_IMAGE"
     local compressed="$RELEASES_DIR/pentaos-${VERSION}-arm64.img.xz"
+    local uncompressed="$RELEASES_DIR/pentaos-${VERSION}-arm64.img"
 
     if [ -f "$compressed" ]; then
         echo_warning "Compressed image already exists, skipping"
+        RELEASE_IMG="$(basename "$compressed")"
+        return 0
+    fi
+    if [ -f "$uncompressed" ]; then
+        echo_warning "Release image already exists, skipping"
+        RELEASE_IMG="$(basename "$uncompressed")"
+        return 0
+    fi
+
+    local do_compress="y"
+    if [ -t 0 ]; then
+        read -r -p "Compress img? [Y/n] " reply
+        [[ "$reply" =~ ^[Nn] ]] && do_compress="n"
+    else
+        echo "Non-interactive shell, defaulting to compress (Y)"
+    fi
+
+    if [ "$do_compress" = "n" ]; then
+        echo "Copying uncompressed image..."
+        if cp "$img" "$uncompressed"; then
+            RELEASE_IMG="$(basename "$uncompressed")"
+            echo_success "Release image ready: $(du -h "$uncompressed" | cut -f1) (uncompressed)"
+        else
+            echo_error "Failed to copy image"
+            exit 1
+        fi
         return 0
     fi
 
@@ -100,6 +127,7 @@ compress_image() {
     echo "Original size: $(du -h "$img" | cut -f1)"
 
     if xz -k -v -9 -e "$img" -c > "$compressed"; then
+        RELEASE_IMG="$(basename "$compressed")"
         local compressed_size=$(du -h "$compressed" | cut -f1)
         echo_success "Image compressed: $compressed_size"
     else
@@ -115,11 +143,11 @@ create_checksum() {
     cd "$RELEASES_DIR"
 
     # SHA256 checksum
-    sha256sum pentaos-${VERSION}-arm64.img.xz > pentaos-${VERSION}-arm64.img.xz.sha256
+    sha256sum "$RELEASE_IMG" > "${RELEASE_IMG}.sha256"
     echo_success "SHA256 checksum created"
 
     # MD5 checksum (for compatibility)
-    md5sum pentaos-${VERSION}-arm64.img.xz > pentaos-${VERSION}-arm64.img.xz.md5
+    md5sum "$RELEASE_IMG" > "${RELEASE_IMG}.md5"
     echo_success "MD5 checksum created"
 
     cd - > /dev/null
@@ -484,9 +512,9 @@ Version: $VERSION
 Date: $(date +%Y-%m-%d)
 
 CONTENTS:
-- pentaos-${VERSION}-arm64.img.xz (Bootable image, compressed)
-- pentaos-${VERSION}-arm64.img.xz.sha256 (SHA256 checksum)
-- pentaos-${VERSION}-arm64.img.xz.md5 (MD5 checksum)
+- ${RELEASE_IMG} (Bootable image$([ "${RELEASE_IMG##*.}" = "xz" ] && echo ", compressed"))
+- ${RELEASE_IMG}.sha256 (SHA256 checksum)
+- ${RELEASE_IMG}.md5 (MD5 checksum)
 - RELEASE_NOTES_${VERSION}.md
 - INSTALLATION_GUIDE.md
 - MANIFEST_${VERSION}.txt (this file)
@@ -496,7 +524,7 @@ IMAGE SPECIFICATIONS:
 - Kernel: Linux 6.6.x
 - Architecture: ARM64 (aarch64)
 - Filesystem: ext4
-- Compression: XZ (xz-utils)
+- Compression: $([ "${RELEASE_IMG##*.}" = "xz" ] && echo "XZ (xz-utils)" || echo "None (uncompressed)")
 
 HARDWARE COMPATIBILITY:
 ✅ Raspberry Pi 3B, 3B+, 4B, 4B (all variants), 5
@@ -537,9 +565,9 @@ print_summary() {
     ls -lh "$RELEASES_DIR" | grep -v "^total" | awk '{print "  " $9 " (" $5 ")"}'
     echo ""
     echo "Download Links:"
-    echo "  Image: pentaos-${VERSION}-arm64.img.xz"
-    echo "  SHA256: pentaos-${VERSION}-arm64.img.xz.sha256"
-    echo "  MD5: pentaos-${VERSION}-arm64.img.xz.md5"
+    echo "  Image: $RELEASE_IMG"
+    echo "  SHA256: ${RELEASE_IMG}.sha256"
+    echo "  MD5: ${RELEASE_IMG}.md5"
     echo ""
     echo "Next steps:"
     echo "  1. Upload files to GitHub releases"

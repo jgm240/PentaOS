@@ -105,7 +105,7 @@ customize_image() {
     # 6. Unmount the image
 
     echo -e "${YELLOW}Note: Full image customization requires elevated privileges${NC}"
-    echo -e "${YELLOW}To complete: sudo ./build/customize-image.sh${NC}"
+    echo -e "${YELLOW}To complete: sudo ./build/customize-rpi-image.sh (or sudo ./build/release-image.sh for a compressed release)${NC}"
 
     # Copy setup scripts to standard location for reference
     mkdir -p "$WORK_DIR/setup-files"
@@ -116,42 +116,27 @@ customize_image() {
     echo -e "${YELLOW}Setup scripts prepared in: $WORK_DIR/setup-files/${NC}"
 }
 
-# Create PentaOS image
-create_pentaos_image() {
-    echo -e "${YELLOW}Creating PentaOS image...${NC}"
-
-    local source_img="$OUTPUT_DIR/${RPI_OS_IMAGE}"
-    local pentaos_img="$OUTPUT_DIR/pentaos-${PENTAOS_VERSION}-arm64.img"
-
-    if [ -f "$pentaos_img" ]; then
-        echo -e "${GREEN}✓ PentaOS image already created${NC}"
-        return 0
-    fi
-
-    # Copy the Raspberry Pi OS image as PentaOS base
-    if cp "$source_img" "$pentaos_img"; then
-        echo -e "${GREEN}✓ PentaOS image created${NC}"
-    else
-        echo -e "${RED}✗ Failed to create PentaOS image${NC}"
-        exit 1
-    fi
-}
-
 # Print build information
 print_build_info() {
     echo ""
     echo -e "${GREEN}===============================================${NC}"
-    echo -e "${GREEN}Build completed successfully!${NC}"
+    echo -e "${GREEN}Download complete!${NC}"
     echo -e "${GREEN}===============================================${NC}"
     echo ""
-    echo -e "PentaOS Image: ${YELLOW}$OUTPUT_DIR/pentaos-${PENTAOS_VERSION}-arm64.img${NC}"
+    echo -e "Raspberry Pi OS base image: ${YELLOW}$OUTPUT_DIR/${RPI_OS_IMAGE}${NC}"
     echo ""
-    echo "Next steps:"
-    echo "1. Flash to SD card:"
-    echo "   ${YELLOW}sudo dd if=$OUTPUT_DIR/pentaos-${PENTAOS_VERSION}-arm64.img of=/dev/sdX bs=4M status=progress${NC}"
+    echo "This is still an unmodified Raspberry Pi OS image - it has none of"
+    echo "PentaOS's branding or first-boot setup baked in yet. Do NOT flash it"
+    echo "directly. Next steps:"
     echo ""
-    echo "2. Or use the flash script:"
-    echo "   ${YELLOW}sudo $SCRIPT_DIR/flash-sd-card.sh /dev/sdX${NC}"
+    echo "1. Customize it in place:"
+    echo "   ${YELLOW}sudo $SCRIPT_DIR/customize-rpi-image.sh${NC}"
+    echo ""
+    echo "2. Or build a full compressed release (customize + compress + checksums):"
+    echo "   ${YELLOW}sudo $SCRIPT_DIR/release-image.sh${NC}"
+    echo "   ${YELLOW}-> produces ${PROJECT_ROOT}/releases/pentaos-${PENTAOS_VERSION}-arm64.img.xz${NC}"
+    echo ""
+    echo "Only flash the image *after* one of the above has customized it."
     echo ""
 }
 
@@ -161,7 +146,6 @@ main() {
     download_rpi_os
     extract_image
     customize_image
-    create_pentaos_image
     print_build_info
 }
 
